@@ -1,0 +1,2873 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        #map {
+            width: 901px;
+            height: 627px;
+        }
+        </style>
+        <title>Interactive Map Analysis of the Coronavirus Cases in NYC </title>
+    </head>
+    <body>
+
+    	<div id='Article1'>
+    		<h2>Interactive Map Analysis of the Coronavirus Cases in NYC </h2>
+    		<p><b>Description:</b> The primary goal is to create a web mapping with a listing of all of the people living in New York City. Using Data mapping to showcase the affected people in New York City by the zip code. I used leaflet a javascript library.</p>
+
+    		<br>
+    		<p><b>Article</b></p>    		
+    		<p>As of Thursday night, there have been more than 332,931 confirmed cases of the coronavirus in New York, including more than 185,653 in New York City. More than 26,206 people with COVID-19 have died in the state, including people with probable, but not confirmed, cases of the virus. Nationwide, over 1.2 million cases of COVID-19 have been confirmed across all 50 states, Washington, D.C., and three U.S. territories. More than 75,744 Americans have lost their lives to the virus. COVID-19 has killed more than 269,584 worldwide — and far more in the U.S. than in any other country.
+
+Inside the recently opened Kimmel Pavilion in Manhattan, hundreds of patients rest in rooms designed to minimize infection. When the nurses do take a break, a soundtrack of wailing sirens reminds them what lies ahead on their return. On March 10, N.Y.U.’s medical center had just two coronavirus patients. Today, patients are spread over every floor of both Kimmel and nearby Tisch Hospital, said Robert Magyar, a hospital spokesman. The medical staff is weary, but many said they were relieved to have the supplies and protective gear that are in short supply at so many other institutions.
+</p>
+
+<br>
+
+<h3>Data Visualization on Map</h3>
+
+</div>
+		
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/CovidLayer_0.js"></script>
+        <script src="data/Hospitals_1.js"></script>
+ 
+        <script>
+
+
+
+
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[40.48479952167545,-74.39600755802239],[40.92567826547839,-73.56150179210893]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        var bounds_group = new L.featureGroup([]);
+
+
+        function setBounds() {
+        }
+        function pop_CovidLayer_0(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">ZIPCODE</th>\
+                        <td>' + (feature.properties['ZIPCODE'] !== null ? autolinker.link(feature.properties['ZIPCODE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PO_NAME</th>\
+                        <td>' + (feature.properties['PO_NAME'] !== null ? autolinker.link(feature.properties['PO_NAME'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">POPULATION</th>\
+                        <td>' + (feature.properties['POPULATION'] !== null ? autolinker.link(feature.properties['POPULATION'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">AREA</th>\
+                        <td>' + (feature.properties['AREA'] !== null ? autolinker.link(feature.properties['AREA'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">STATE</th>\
+                        <td>' + (feature.properties['STATE'] !== null ? autolinker.link(feature.properties['STATE'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">COUNTY</th>\
+                        <td>' + (feature.properties['COUNTY'] !== null ? autolinker.link(feature.properties['COUNTY'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">CTY_FIPS</th>\
+                        <td>' + (feature.properties['CTY_FIPS'] !== null ? autolinker.link(feature.properties['CTY_FIPS'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Positive</th>\
+                        <td>' + (feature.properties['Positive'] !== null ? autolinker.link(feature.properties['Positive'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Total</th>\
+                        <td>' + (feature.properties['Total'] !== null ? autolinker.link(feature.properties['Total'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">zcta</th>\
+                        <td>' + (feature.properties['zcta'] !== null ? autolinker.link(feature.properties['zcta'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">PopDensity</th>\
+                        <td>' + (feature.properties['PopDensity'] !== null ? autolinker.link(feature.properties['PopDensity'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_CovidLayer_0_0(feature) {
+            switch(String(feature.properties['Total'])) {
+                case '91':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(43,131,186,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '97':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(172,222,164,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '174':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(173,222,165,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '180':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(174,223,165,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '183':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(175,223,165,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '199':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(176,223,166,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '211':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(177,224,166,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '212':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(178,224,166,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '223':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(179,225,167,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '254':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(180,225,167,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '368':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(181,225,167,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '435':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(182,226,168,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '513':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(183,226,168,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '518':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,227,168,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '569':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(185,227,169,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '609':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(186,227,169,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '651':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(187,228,169,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '657':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(188,228,170,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '723':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(189,229,170,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '736':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(190,229,170,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '796':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(191,229,170,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '807':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(192,230,171,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '858':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(193,230,171,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '927':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(194,230,171,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '944':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(195,231,172,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '956':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(196,231,172,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '958':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(197,232,172,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '981':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(198,232,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '990':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(199,232,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1003':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(200,233,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1007':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(201,233,174,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1014':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(202,234,174,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1038':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(203,234,174,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1039':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(204,234,175,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1055':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,235,175,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1072':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,235,175,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1076':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,236,175,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1083':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(207,236,176,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1084':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(208,236,176,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1093':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,237,176,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1110':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(210,237,177,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1124':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,238,177,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1150':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(212,238,177,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1161':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,238,178,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1169':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(214,239,178,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1192':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,239,178,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1204':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(216,240,179,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1242':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(217,240,179,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1259':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(218,240,179,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1266':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,241,180,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1269':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,241,180,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1283':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(221,242,180,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1308':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(222,242,181,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1309':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(223,242,181,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1371':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(224,243,181,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1391':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(225,243,181,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1409':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(226,244,182,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1417':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,244,182,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1421':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(228,244,182,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1441':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(229,245,183,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1507':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(230,245,183,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1515':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,246,183,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1527':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(232,246,184,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1538':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(233,246,184,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1541':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(234,247,184,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1544':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(235,247,185,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1579':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(236,248,185,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1592':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(237,248,185,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1630':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,248,186,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1636':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(239,249,186,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1639':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(240,249,186,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1669':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(241,250,187,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1705':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(242,250,187,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1706':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(243,250,187,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1739':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(244,251,187,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1758':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(245,251,188,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1761':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(246,252,188,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1762':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,252,188,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1765':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(248,252,189,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1768':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(249,253,189,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1779':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(250,253,189,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1792':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(251,254,190,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1804':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(252,254,190,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1817':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,254,190,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1834':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,255,191,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1844':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,191,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1877':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,191,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1919':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,254,189,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '1961':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,252,187,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2015':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,250,185,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2041':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,248,182,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2082':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,246,180,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2106':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,244,178,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2120':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,242,176,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2169':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,240,174,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2179':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,238,171,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2185':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,237,169,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2222':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,235,167,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2230':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,233,165,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2279':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,231,163,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2283':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,229,161,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2287':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,227,158,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2288':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,225,156,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2298':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,223,154,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2305':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,221,152,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2335':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,220,150,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2423':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,218,147,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2445':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,216,145,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2452':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,214,143,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2474':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,212,141,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2484':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,210,139,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2533':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,208,136,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2540':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,206,134,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2542':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,204,132,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2550':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,203,130,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2711':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,201,128,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2719':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,199,125,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2771':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,197,123,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2782':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,195,121,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2796':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,193,119,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '2946':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,191,117,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3017':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,189,114,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3039':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,187,112,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3067':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,186,110,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3101':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,184,108,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3175':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,182,106,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3190':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,180,103,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3219':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,178,101,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3246':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,176,99,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3266':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(253,174,97,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3268':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,171,95,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3272':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,167,94,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3335':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,164,92,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3436':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,160,90,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3439':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,157,89,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3534':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,153,87,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3647':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,150,86,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3670':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,146,84,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3727':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,143,82,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3781':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,139,81,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3810':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,136,79,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3814':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,132,78,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3847':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,129,76,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3880':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,125,74,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3908':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,122,73,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3923':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,119,71,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3935':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,115,69,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3989':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,112,68,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '3996':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,108,66,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4043':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,105,65,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4053':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(254,101,63,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4064':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,98,61,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4093':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,94,60,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4097':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,91,58,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4134':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,87,57,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4136':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,84,55,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4157':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,80,53,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4393':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,77,52,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4411':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,73,50,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4430':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,70,49,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4465':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,66,47,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4469':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,63,45,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4488':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,59,44,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4614':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,56,42,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4734':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,52,40,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4867':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,49,39,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '4995':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,45,37,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5462':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,42,36,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '5824':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,39,34,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6351':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,35,32,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6406':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,32,31,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '6487':
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,28,29,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_CovidLayer_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,25,28,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_CovidLayer_0');
+        map.getPane('pane_CovidLayer_0').style.zIndex = 400;
+        map.getPane('pane_CovidLayer_0').style['mix-blend-mode'] = 'normal';
+        var layer_CovidLayer_0 = new L.geoJson(json_CovidLayer_0, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_CovidLayer_0',
+            layerName: 'layer_CovidLayer_0',
+            pane: 'pane_CovidLayer_0',
+            onEachFeature: pop_CovidLayer_0,
+            style: style_CovidLayer_0_0,
+        });
+        bounds_group.addLayer(layer_CovidLayer_0);
+        map.addLayer(layer_CovidLayer_0);
+        function pop_Hospitals_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Borough</th>\
+                        <td>' + (feature.properties['Borough'] !== null ? autolinker.link(feature.properties['Borough'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Facility_N</th>\
+                        <td>' + (feature.properties['Facility_N'] !== null ? autolinker.link(feature.properties['Facility_N'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Cross_Stre</th>\
+                        <td>' + (feature.properties['Cross_Stre'] !== null ? autolinker.link(feature.properties['Cross_Stre'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Phone</th>\
+                        <td>' + (feature.properties['Phone'] !== null ? autolinker.link(feature.properties['Phone'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Latitude</th>\
+                        <td>' + (feature.properties['Latitude'] !== null ? autolinker.link(feature.properties['Latitude'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Longitude'] !== null ? autolinker.link(feature.properties['Longitude'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Location</th>\
+                        <td>' + (feature.properties['Location'] !== null ? autolinker.link(feature.properties['Location'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_Hospitals_1_0() {
+            return {
+                pane: 'pane_Hospitals_1',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/health_hospital_emergency.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+        }
+
+
+
+        map.createPane('pane_Hospitals_1');
+        map.getPane('pane_Hospitals_1').style.zIndex = 401;
+        map.getPane('pane_Hospitals_1').style['mix-blend-mode'] = 'normal';
+        var layer_Hospitals_1 = new L.geoJson(json_Hospitals_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Hospitals_1',
+            layerName: 'layer_Hospitals_1',
+            pane: 'pane_Hospitals_1',
+            onEachFeature: pop_Hospitals_1,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_Hospitals_1_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Hospitals_1);
+        map.addLayer(layer_Hospitals_1);
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'<img src="legend/Hospitals_1.png" /> Hospitals': layer_Hospitals_1,'CovidLayer<br /><table><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_910.png" /></td><td>91</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_971.png" /></td><td>97</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_1742.png" /></td><td>174</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_1803.png" /></td><td>180</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_1834.png" /></td><td>183</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_1995.png" /></td><td>199</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2116.png" /></td><td>211</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2127.png" /></td><td>212</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2238.png" /></td><td>223</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2549.png" /></td><td>254</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_36810.png" /></td><td>368</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_43511.png" /></td><td>435</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_51312.png" /></td><td>513</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_51813.png" /></td><td>518</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_56914.png" /></td><td>569</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_60915.png" /></td><td>609</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_65116.png" /></td><td>651</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_65717.png" /></td><td>657</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_72318.png" /></td><td>723</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_73619.png" /></td><td>736</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_79620.png" /></td><td>796</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_80721.png" /></td><td>807</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_85822.png" /></td><td>858</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_92723.png" /></td><td>927</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_94424.png" /></td><td>944</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_95625.png" /></td><td>956</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_95826.png" /></td><td>958</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_98127.png" /></td><td>981</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_99028.png" /></td><td>990</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_100329.png" /></td><td>1003</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_100730.png" /></td><td>1007</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_101431.png" /></td><td>1014</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_103832.png" /></td><td>1038</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_103933.png" /></td><td>1039</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_105534.png" /></td><td>1055</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_107235.png" /></td><td>1072</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_107636.png" /></td><td>1076</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_108337.png" /></td><td>1083</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_108438.png" /></td><td>1084</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_109339.png" /></td><td>1093</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_111040.png" /></td><td>1110</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_112441.png" /></td><td>1124</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_115042.png" /></td><td>1150</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_116143.png" /></td><td>1161</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_116944.png" /></td><td>1169</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_119245.png" /></td><td>1192</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_120446.png" /></td><td>1204</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_124247.png" /></td><td>1242</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_125948.png" /></td><td>1259</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_126649.png" /></td><td>1266</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_126950.png" /></td><td>1269</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_128351.png" /></td><td>1283</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_130852.png" /></td><td>1308</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_130953.png" /></td><td>1309</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_137154.png" /></td><td>1371</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_139155.png" /></td><td>1391</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_140956.png" /></td><td>1409</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_141757.png" /></td><td>1417</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_142158.png" /></td><td>1421</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_144159.png" /></td><td>1441</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_150760.png" /></td><td>1507</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_151561.png" /></td><td>1515</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_152762.png" /></td><td>1527</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_153863.png" /></td><td>1538</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_154164.png" /></td><td>1541</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_154465.png" /></td><td>1544</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_157966.png" /></td><td>1579</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_159267.png" /></td><td>1592</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_163068.png" /></td><td>1630</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_163669.png" /></td><td>1636</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_163970.png" /></td><td>1639</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_166971.png" /></td><td>1669</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_170572.png" /></td><td>1705</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_170673.png" /></td><td>1706</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_173974.png" /></td><td>1739</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_175875.png" /></td><td>1758</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_176176.png" /></td><td>1761</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_176277.png" /></td><td>1762</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_176578.png" /></td><td>1765</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_176879.png" /></td><td>1768</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_177980.png" /></td><td>1779</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_179281.png" /></td><td>1792</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_180482.png" /></td><td>1804</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_181783.png" /></td><td>1817</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_183484.png" /></td><td>1834</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_184485.png" /></td><td>1844</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_187786.png" /></td><td>1877</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_191987.png" /></td><td>1919</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_196188.png" /></td><td>1961</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_201589.png" /></td><td>2015</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_204190.png" /></td><td>2041</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_208291.png" /></td><td>2082</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_210692.png" /></td><td>2106</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_212093.png" /></td><td>2120</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_216994.png" /></td><td>2169</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_217995.png" /></td><td>2179</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_218596.png" /></td><td>2185</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_222297.png" /></td><td>2222</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_223098.png" /></td><td>2230</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_227999.png" /></td><td>2279</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2283100.png" /></td><td>2283</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2287101.png" /></td><td>2287</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2288102.png" /></td><td>2288</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2298103.png" /></td><td>2298</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2305104.png" /></td><td>2305</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2335105.png" /></td><td>2335</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2423106.png" /></td><td>2423</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2445107.png" /></td><td>2445</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2452108.png" /></td><td>2452</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2474109.png" /></td><td>2474</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2484110.png" /></td><td>2484</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2533111.png" /></td><td>2533</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2540112.png" /></td><td>2540</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2542113.png" /></td><td>2542</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2550114.png" /></td><td>2550</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2711115.png" /></td><td>2711</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2719116.png" /></td><td>2719</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2771117.png" /></td><td>2771</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2782118.png" /></td><td>2782</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2796119.png" /></td><td>2796</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_2946120.png" /></td><td>2946</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3017121.png" /></td><td>3017</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3039122.png" /></td><td>3039</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3067123.png" /></td><td>3067</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3101124.png" /></td><td>3101</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3175125.png" /></td><td>3175</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3190126.png" /></td><td>3190</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3219127.png" /></td><td>3219</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3246128.png" /></td><td>3246</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3266129.png" /></td><td>3266</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3268130.png" /></td><td>3268</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3272131.png" /></td><td>3272</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3335132.png" /></td><td>3335</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3436133.png" /></td><td>3436</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3439134.png" /></td><td>3439</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3534135.png" /></td><td>3534</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3647136.png" /></td><td>3647</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3670137.png" /></td><td>3670</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3727138.png" /></td><td>3727</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3781139.png" /></td><td>3781</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3810140.png" /></td><td>3810</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3814141.png" /></td><td>3814</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3847142.png" /></td><td>3847</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3880143.png" /></td><td>3880</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3908144.png" /></td><td>3908</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3923145.png" /></td><td>3923</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3935146.png" /></td><td>3935</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3989147.png" /></td><td>3989</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_3996148.png" /></td><td>3996</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4043149.png" /></td><td>4043</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4053150.png" /></td><td>4053</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4064151.png" /></td><td>4064</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4093152.png" /></td><td>4093</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4097153.png" /></td><td>4097</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4134154.png" /></td><td>4134</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4136155.png" /></td><td>4136</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4157156.png" /></td><td>4157</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4393157.png" /></td><td>4393</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4411158.png" /></td><td>4411</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4430159.png" /></td><td>4430</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4465160.png" /></td><td>4465</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4469161.png" /></td><td>4469</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4488162.png" /></td><td>4488</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4614163.png" /></td><td>4614</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4734164.png" /></td><td>4734</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4867165.png" /></td><td>4867</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_4995166.png" /></td><td>4995</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_5462167.png" /></td><td>5462</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_5824168.png" /></td><td>5824</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_6351169.png" /></td><td>6351</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_6406170.png" /></td><td>6406</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_6487171.png" /></td><td>6487</td></tr><tr><td style="text-align: center;"><img src="legend/CovidLayer_0_172.png" /></td><td></td></tr></table>': layer_CovidLayer_0,}).addTo(map);
+        setBounds();
+        var i = 0;
+        layer_CovidLayer_0.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['ZIPCODE'] !== null?String('<div style="color: #000000; font-size: 5pt; font-family: \'MS Shell Dlg 2\', sans-serif;">' + layer.feature.properties['ZIPCODE']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_CovidLayer_0'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_CovidLayer_0]);
+        map.on("zoomend", function(){
+            resetLabels([layer_CovidLayer_0]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_CovidLayer_0]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_CovidLayer_0]);
+        });
+        </script>
+    </body>
+</html>
